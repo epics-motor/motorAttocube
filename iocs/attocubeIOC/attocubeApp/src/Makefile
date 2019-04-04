@@ -21,12 +21,13 @@ attocube_DBD += base.dbd
 # Include dbd files from all support applications:
 #ifdef ASYN
 attocube_DBD += asyn.dbd
+attocube_DBD += drvAsynSerialPort.dbd
 #endif
 attocube_DBD += motorSupport.dbd
 attocube_DBD += devAttocube.dbd
 
 # Add all the support libraries needed by this IOC
-attocube_LIBS += attocube
+attocube_LIBS += Attocube
 attocube_LIBS += motor
 #ifdef ASYN
 attocube_LIBS += asyn
