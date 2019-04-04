@@ -5,6 +5,9 @@ include $(TOP)/configure/CONFIG
 #  ADD MACRO DEFINITIONS AFTER THIS LINE
 #=============================
 
+# The following are used for debugging messages.
+#!USR_CXXFLAGS += -DDEBUG
+
 #=============================
 # Build the IOC application
 
@@ -16,10 +19,21 @@ DBD += attocube.dbd
 attocube_DBD += base.dbd
 
 # Include dbd files from all support applications:
-#attocube_DBD += xxx.dbd
+#ifdef ASYN
+attocube_DBD += asyn.dbd
+#endif
+attocube_DBD += motorSupport.dbd
+attocube_DBD += devAttocube.dbd
 
 # Add all the support libraries needed by this IOC
-#attocube_LIBS += xxx
+attocube_LIBS += attocube
+attocube_LIBS += motor
+#ifdef ASYN
+attocube_LIBS += asyn
+#endif
+#ifdef SNCSEQ
+attocube_LIBS += seq pv
+#endif
 
 # attocube_registerRecordDeviceDriver.cpp derives from attocube.dbd
 attocube_SRCS += attocube_registerRecordDeviceDriver.cpp
