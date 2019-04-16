@@ -1,6 +1,5 @@
 # motorAttocube
-EPICS motor drivers for the following [Attocube](https://www.attocube.com) controllers:<br>
-MM3000, MM4000/5/6, PM500, ESP300/301/100, XPSC8, HXP100-ELEC, AG_CONEX and AG_UC
+EPICS motor drivers for the following [Attocube](https://www.attocube.com) controllers: ANC150 Piezo Step Controller
 
 motorAttocube is a submodule of [motor](https://github.com/epics-modules/motor).  When motorAttocube is built in the ``motor/modules`` directory, no manual configuration is needed.
 
