@@ -1,5 +1,19 @@
 # motorAttocube Releases
 
+## __R1-0-1 (2020-05-11)__
+R1-0-1 is a release based on the master branch.  
+
+### Changes since R1-0
+
+#### New features
+* None
+
+#### Modifications to existing features
+* None
+
+#### Bug fixes
+* Commit [331069c](https://github.com/epics-motor/motorAttocube/commit/331069c605e03cd78c438d53c1d8decb714f4d83): Include ``$(MOTOR)/modules/RELEASE.$(EPICS_HOST_ARCH).local`` instead of ``$(MOTOR)/configure/RELEASE``
+
 ## __R1-0 (2019-04-18)__
 R1-0 is a release based on the master branch.  
 
