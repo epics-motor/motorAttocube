@@ -8,13 +8,15 @@ include $(TOP)/configure/CONFIG
 
 DBD += devAttocube.dbd
 
+INC += motorAttocubeDriver.h
+
 LIBRARY_IOC = Attocube
 
 # ANC 150 asyn motor driver.
-Attocube_SRCS += drvANC150Asyn.cc
+Attocube_SRCS += drvANC150Asyn.cc motorAttocubeDriver.cc
 
 Attocube_LIBS += motor asyn
-Attocube_LIBS += $(EPICS_BASE_IOC_LIBS)
+Attocube_LIBS += $(EPICS_BASE_IOC_LIBS) attocubeJSON
 
 include $(TOP)/configure/RULES
 
