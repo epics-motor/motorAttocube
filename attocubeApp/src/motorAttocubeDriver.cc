@@ -24,45 +24,133 @@ Dec 7, 2022
 #include "motorAttocubeDriver.h"
 
 
+// Error message formatters
+#define ERR_AXIS(msg)                                                                                 \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", axisClassName, functionName, \
+              msg)
+
+#define ERR_AXIS_ARGS(fmt, ...)                                                              \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", axisClassName, \
+              functionName, __VA_ARGS__);
+
+// Warning message formatters
+#define WARN_AXIS(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", axisClassName, functionName, msg)
+
+#define WARN_AXIS_ARGS(fmt, ...)                                                            \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", axisClassName, \
+              functionName, __VA_ARGS__);
+
+// Log message formatters
+#define LOG_AXIS(msg) \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: %s\n", axisClassName, functionName, msg)
+
+#define LOG_AXIS_ARGS(fmt, ...)                                                                       \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: " fmt "\n", axisClassName, functionName, \
+              __VA_ARGS__);
+
 
 // Error message formatters
 #define ERR(msg)                                                                                 \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", driverName, functionName, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", controllerClassName, functionName, \
               msg)
 
 #define ERR_ARGS(fmt, ...)                                                              \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", driverName, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", controllerClassName, \
               functionName, __VA_ARGS__);
 
 // Warning message formatters
 #define WARN(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", driverName, functionName, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", controllerClassName, functionName, msg)
 
 #define WARN_ARGS(fmt, ...)                                                            \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", driverName, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", controllerClassName, \
               functionName, __VA_ARGS__);
 
 // Log message formatters
 #define LOG(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: %s\n", driverName, functionName, msg)
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: %s\n", controllerClassName, functionName, msg)
 
 #define LOG_ARGS(fmt, ...)                                                                       \
-    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "%s::%s: " fmt "\n", driverName, functionName, \
+    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: " fmt "\n", controllerClassName, functionName, \
               __VA_ARGS__);
 
 
-static const char* driverName = "MotorAttocubeDriver";
+static const char* controllerClassName = "AttocubeController";
+static const char* axisClassName = "AttocubeAxis";
+
 
 
 static void exitCallbackC(void* pPvt) {
-    AttocubeController* pController = (AttocubeController) pPvt;
+    AttocubeController* pController = (AttocubeController*) pPvt;
     delete pController;
 }
+
+extern "C" asynStatus AttocubeAxis(const char* portName) {
+    new AttocubeAxis(portName);
+    return asynSuccess;
+}
+
+void AttocubeAxis::report(FILE* fp, int level){
+    asynMotorAxis::report(fp, level);
+}
+
+asynStatus AttocubeAxis::stop(double acceleration){
+
+}
+
+AttocubeAxis::AttocubeAxis(AttocubeController* pController, int axisNum, int activate)
+    : asynMotorAxis(pController, axisNum)
+{
+    asynStatus status;
+    const char* functionName = "AttocubeAxis";
+    LOG_AXIS_ARGS("Configuring Axis %d", axisNum);
+    this->pController = pController;
+    this->channel = axisNum;
+
+    if(activate == 1)
+        AMC_control_setControlOutput(this->pController->controllerHandle, this->channel, true);
+
+    callParamCallbacks();
+}
+
+AttocubeAxis::~AttocubeAxis(){
+    bool enabled;
+    AMC_control_getControlOutput(this->pController->controllerHandle, this->channel, &enabled);
+
+    if(enabled){
+        LOG_AXIS_ARGS("Disabling activated axis: %d", this->channel);
+        AMC_control_setControlOutput(this->pController->controllerHandle, this->channel, false);
+    }
+}
+
 
 extern "C" asynStatus AttocubeControllerConfig(const char* portName, const char* ip) {
     new AttocubeController(portName, ip);
     return asynSuccess;
 }
+
+
+void AttocubeController::report(FILE* fp, int level){
+    fprintf(fp, "Attocube motor driver: %s\n", this->portName)
+    asynMotorController::report(fp, level);
+}
+
+AttocubeAxis* AttocubeController::getAxis(asynUser* pasynUser){
+    return static_cast<AttocubeAxis*>(asynMotorController::getAxis(axisNo));
+}
+
+
+asynStatus AttocubeController::writeInt32(asynUser* pasynUser, epicsInt32 value){
+
+    int function = pasynUser->reason;
+    asynStatus status = asynSuccess;
+    AttocubeAxis* pAxis = getAxis(pasynUser);
+    static const char* functionName = "writeInt32";
+    return status;
+}
+
+
 
 AttocubeController::AttocubeController(const char* portName, const char* ip)
     : asynMotorController(portName, 3, NUM_ATTOCUBE_PARAMS,

@@ -22,12 +22,14 @@ Dec 7 2022
 #define AttocubeMacAddressString "ATTOCUBE_MAC"
 
 
-/*
+
 class epicsShareClass AttocubeAxis : public asynMotorAxis
 {
 public:
 
-    AttocubeAxis(class AttocubeController *pController, int axis, double lowLimit, double hiLimit, double home, double start);
+    AttocubeAxis(class AttocubeController *pController, int axisNum, int enable);
+    ~AttocubeAxis();
+    void report(FILE* fp, int level);
     asynStatus move(double position, int relative, double min_velocity, double max_velocity, double acceleration);
     asynStatus moveVelocity(double min_velocity, double max_velocity, double acceleration);
     asynStatus home(double min_velocity, double max_velocity, double acceleration, int forwards);
@@ -36,12 +38,12 @@ public:
     asynStatus setPosition(double position);
 
 private:
-    AttocubeController *pC_;
-    asynStatus comStatus_;
+    AttocubeController* pController;
+    int channel;
 
 friend class AttocubeController;
 };
-*/
+
 
 class epicsShareClass AttocubeController : asynMotorController {
 public:
@@ -49,10 +51,10 @@ public:
     /* These are the fucntions we override from the base class */
     AttocubeController(const char *portName, const char* ip);
     ~AttocubeController();
-    //asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    //void report(FILE *fp, int level);
-    //motorSimAxis* getAxis(asynUser *pasynUser);
-    //motorSimAxis* getAxis(int axisNo);
+    asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
+    void report(FILE* fp, int level);
+    AttocubeAxis* getAxis(asynUser* pasynUser);
+    AttocubeAxis* getAxis(int axisNun);
 
 protected:
     int controllerHandle;

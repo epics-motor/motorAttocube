@@ -6,7 +6,7 @@ include $(TOP)/configure/CONFIG
 # must be uncommented to use diagnostic debugging messages.
 #!USR_CXXFLAGS += -DDEBUG
 
-DBD += devAttocube.dbd
+DBD += devAttocube.dbd attocubeDriver.dbd
 
 INC += motorAttocubeDriver.h
 
