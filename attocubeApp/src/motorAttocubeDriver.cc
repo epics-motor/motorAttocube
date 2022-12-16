@@ -26,27 +26,27 @@ Dec 7, 2022
 
 // Error message formatters
 #define ERR_AXIS(msg)                                                                                 \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", axisClassName, functionName, \
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "ERROR | %s::%s: %s\n", axisClassName, functionName, \
               msg)
 
 #define ERR_AXIS_ARGS(fmt, ...)                                                              \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", axisClassName, \
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "ERROR | %s::%s: " fmt "\n", axisClassName, \
               functionName, __VA_ARGS__);
 
 // Warning message formatters
 #define WARN_AXIS(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", axisClassName, functionName, msg)
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "WARN | %s::%s: %s\n", axisClassName, functionName, msg)
 
 #define WARN_AXIS_ARGS(fmt, ...)                                                            \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", axisClassName, \
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "WARN | %s::%s: " fmt "\n", axisClassName, \
               functionName, __VA_ARGS__);
 
 // Log message formatters
 #define LOG_AXIS(msg) \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: %s\n", axisClassName, functionName, msg)
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "%s::%s: %s\n", axisClassName, functionName, msg)
 
 #define LOG_AXIS_ARGS(fmt, ...)                                                                       \
-    asynPrint(pasynUserSelf, ASYN_TRACE_ERROR, "%s::%s: " fmt "\n", axisClassName, functionName, \
+    asynPrint(this->pController->getAsynUser(), ASYN_TRACE_ERROR, "%s::%s: " fmt "\n", axisClassName, functionName, \
               __VA_ARGS__);
 
 
@@ -85,22 +85,60 @@ static void exitCallbackC(void* pPvt) {
     AttocubeController* pController = (AttocubeController*) pPvt;
     delete pController;
 }
-
-extern "C" asynStatus AttocubeAxis(const char* portName) {
+/*
+extern "C" asynStatus AttocubeAxisConfig(const char* portName) {
     new AttocubeAxis(portName);
     return asynSuccess;
 }
+*/
 
 void AttocubeAxis::report(FILE* fp, int level){
     asynMotorAxis::report(fp, level);
 }
 
+asynStatus AttocubeAxis::move(double target, int relative, double minVelocity, double maxVelocity, double acceleration) {
+    asynStatus status = asynSuccess;
+    static const char* functionName = "move";
+
+    double position;
+	AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
+
+    double finalPosition = target;
+    if(relative == 1)
+        finalPosition = position + target;
+
+	AMC_move_setControlTargetPosition(this->pController->getHandle(), this->channel, finalPosition);
+	AMC_control_setControlMove(this->pController->getHandle(), this->channel, true);
+
+    bool inTargetRange;
+    AMC_status_getStatusTargetRange(this->pController->getHandle(), this->channel, &inTargetRange);
+    while (!inTargetRange) {
+        // Read out position in nm
+        AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
+        printf("Position %f nm\n", position);
+        epicsThreadSleep(0.1);
+        AMC_status_getStatusTargetRange(this->pController->getHandle(), this->channel, &inTargetRange);
+    }
+
+    AMC_control_setControlMove(this->pController->getHandle(), this->channel, false);
+    return status;
+}
+
+
 asynStatus AttocubeAxis::stop(double acceleration){
+
+    AMC_control_setControlMove(this->pController->getHandle(), this->channel, false);
+    return asynSuccess;
 
 }
 
-AttocubeAxis::AttocubeAxis(AttocubeController* pController, int axisNum, int activate)
-    : asynMotorAxis(pController, axisNum)
+asynStatus AttocubeAxis::poll(bool* moving) {
+    return asynSuccess;
+}
+
+AttocubeAxis::AttocubeAxis(AttocubeController* pC, int axisNum)
+    : asynMotorAxis(pC, axisNum),
+    pController(pC)
 {
     asynStatus status;
     const char* functionName = "AttocubeAxis";
@@ -108,36 +146,42 @@ AttocubeAxis::AttocubeAxis(AttocubeController* pController, int axisNum, int act
     this->pController = pController;
     this->channel = axisNum;
 
-    if(activate == 1)
-        AMC_control_setControlOutput(this->pController->controllerHandle, this->channel, true);
+    AMC_control_setControlOutput(this->pController->getHandle(), this->channel, true);
+    //LOG_AXIS_ARGS("ACTIVATED AXIS %d!", axisNum);
 
     callParamCallbacks();
 }
 
 AttocubeAxis::~AttocubeAxis(){
+    static const char* functionName = "~AttocubeAxis";
     bool enabled;
-    AMC_control_getControlOutput(this->pController->controllerHandle, this->channel, &enabled);
+    AMC_control_getControlOutput(this->pController->getHandle(), this->channel, &enabled);
 
     if(enabled){
         LOG_AXIS_ARGS("Disabling activated axis: %d", this->channel);
-        AMC_control_setControlOutput(this->pController->controllerHandle, this->channel, false);
+        AMC_control_setControlOutput(this->pController->getHandle(), this->channel, false);
     }
 }
 
 
-extern "C" asynStatus AttocubeControllerConfig(const char* portName, const char* ip) {
-    new AttocubeController(portName, ip);
+extern "C" asynStatus AttocubeControllerConfig(const char* portName, const char* ip, int numAxes) {
+    new AttocubeController(portName, ip, numAxes);
     return asynSuccess;
 }
 
 
 void AttocubeController::report(FILE* fp, int level){
-    fprintf(fp, "Attocube motor driver: %s\n", this->portName)
+    fprintf(fp, "Attocube motor driver: %s\n", this->portName);
     asynMotorController::report(fp, level);
 }
 
 AttocubeAxis* AttocubeController::getAxis(asynUser* pasynUser){
-    return static_cast<AttocubeAxis*>(asynMotorController::getAxis(axisNo));
+    return static_cast<AttocubeAxis*>(asynMotorController::getAxis(pasynUser));
+}
+
+
+AttocubeAxis* AttocubeController::getAxis(int axisNum){
+    return static_cast<AttocubeAxis*>(asynMotorController::getAxis(axisNum));
 }
 
 
@@ -150,9 +194,18 @@ asynStatus AttocubeController::writeInt32(asynUser* pasynUser, epicsInt32 value)
     return status;
 }
 
+int AttocubeController::getHandle(){
+    return this->controllerHandle;
+}
 
 
-AttocubeController::AttocubeController(const char* portName, const char* ip)
+asynUser* AttocubeController::getAsynUser(){
+    return pasynUserSelf;
+}
+
+
+
+AttocubeController::AttocubeController(const char* portName, const char* ip, int numAxes)
     : asynMotorController(portName, 3, NUM_ATTOCUBE_PARAMS,
                           0, 0,
                           ASYN_CANBLOCK | ASYN_MULTIDEVICE, 
@@ -160,6 +213,7 @@ AttocubeController::AttocubeController(const char* portName, const char* ip)
                           0, 0)  // Default priority and stack size)
 {
     int axis;
+    this->numAxes = numAxes;
     asynStatus status;
     int result;
 
@@ -178,7 +232,7 @@ AttocubeController::AttocubeController(const char* portName, const char* ip)
     LOG_ARGS("Connecting to controller with IP: %s", ip);
 
     // Use the Attocube API to connect to a controller by IP.
-    result = Connect(ip, &(this->controllerHandle));
+    result = Connect(ip, &this->controllerHandle);
     if (result != ATTOCUBE_Ok) {
         ERR_ARGS("Failed to connect to controller with IP: %s! Error Code: %d", ip, result);
     }
@@ -186,25 +240,28 @@ AttocubeController::AttocubeController(const char* portName, const char* ip)
         LOG("Collecting controller information");
         char serial[256], devName[256], firmware[256], hostname[256], cip[256], mac[256];
 
-        system_getSerialNumber(this->controllerHandle, serial, 256);
+        system_getSerialNumber(this->getHandle(), serial, 256);
         setStringParam(AttocubeSerialNumber, serial);
 
-        system_getFirmwareVersion(this->controllerHandle, firmware, 256);
+        system_getFirmwareVersion(this->getHandle(), firmware, 256);
         setStringParam(AttocubeFirmwareVersion, firmware);
 
-        system_getHostname(this->controllerHandle, hostname, 256);
+        system_getHostname(this->getHandle(), hostname, 256);
         setStringParam(AttocubeHostname, hostname);
 
-        system_getDeviceName(this->controllerHandle, devName, 256);
+        system_getDeviceName(this->getHandle(), devName, 256);
         setStringParam(AttocubeDeviceName, devName);
 
-        system_network_getIpAddress(this->controllerHandle, cip, 256);
+        system_network_getIpAddress(this->getHandle(), cip, 256);
         setStringParam(AttocubeIpAddress, cip);
 
-        system_getMacAddress(this->controllerHandle, mac, 256);
+        system_getMacAddress(this->getHandle(), mac, 256);
         setStringParam(AttocubeMacAddress, mac);
 
         printf("Connected to device: %s\n", serial);
+    }
+    for(axis = 0; axis < numAxes; axis++){
+        new AttocubeAxis(this, axis);
     }
 
     epicsAtExit(exitCallbackC, (void*) this);
@@ -213,8 +270,16 @@ AttocubeController::AttocubeController(const char* portName, const char* ip)
 
 AttocubeController::~AttocubeController(){
     const char* functionName = "~AttocubeController";
+    LOG("Disabling axes...");
+    int axis;
+    for(axis=0;axis<this->numAxes;axis++){
+        AttocubeAxis* pAxis = this->getAxis(axis);
+        if(pAxis != NULL)
+            delete pAxis;
+    }
+
     LOG("Disconnecting from controller...");
-    int result = Disconnect(this->controllerHandle);
+    int result = Disconnect(this->getHandle());
     if(result != ATTOCUBE_Ok) {
         ERR_ARGS("Failed to disconnect from controller. Error Code: %d", result);
     }
@@ -227,19 +292,22 @@ AttocubeController::~AttocubeController(){
 /** Code for iocsh registration */
 static const iocshArg AttocubeControllerConfigArg0 = {"Port name", iocshArgString};
 static const iocshArg AttocubeControllerConfigArg1 = {"IP", iocshArgString};
+static const iocshArg AttocubeControllerConfigArg2 = {"Num axes", iocshArgInt};
 static const iocshArg * const AttocubeControllerConfigArgs[] = {&AttocubeControllerConfigArg0,
-                                                            &AttocubeControllerConfigArg1};
-static const iocshFuncDef AttocubeControllerConfigDef = {"AttocubeControllerConfig", 2, AttocubeControllerConfigArgs};
+                                                            &AttocubeControllerConfigArg1,
+                                                            &AttocubeControllerConfigArg2};
+static const iocshFuncDef AttocubeControllerConfigDef = {"AttocubeControllerConfig", 3, AttocubeControllerConfigArgs};
+
 static void AttocubeControllerCallFunc(const iocshArgBuf *args)
 {
-  AttocubeControllerConfig(args[0].sval, args[1].sval);
+    AttocubeControllerConfig(args[0].sval, args[1].sval, args[2].ival);
 }
 
 static void AttocubeRegister(void)
 {
-  iocshRegister(&AttocubeControllerConfigDef, AttocubeControllerCallFunc);
+    iocshRegister(&AttocubeControllerConfigDef, AttocubeControllerCallFunc);
 }
 
 extern "C" {
-epicsExportRegistrar(AttocubeRegister);
+    epicsExportRegistrar(AttocubeRegister);
 }

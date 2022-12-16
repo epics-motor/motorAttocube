@@ -27,15 +27,15 @@ class epicsShareClass AttocubeAxis : public asynMotorAxis
 {
 public:
 
-    AttocubeAxis(class AttocubeController *pController, int axisNum, int enable);
+    AttocubeAxis(class AttocubeController *pController, int axisNum);
     ~AttocubeAxis();
     void report(FILE* fp, int level);
     asynStatus move(double position, int relative, double min_velocity, double max_velocity, double acceleration);
-    asynStatus moveVelocity(double min_velocity, double max_velocity, double acceleration);
-    asynStatus home(double min_velocity, double max_velocity, double acceleration, int forwards);
+    //asynStatus moveVelocity(double min_velocity, double max_velocity, double acceleration);
+    //asynStatus home(double min_velocity, double max_velocity, double acceleration, int forwards);
     asynStatus stop(double acceleration);
     asynStatus poll(bool *moving);
-    asynStatus setPosition(double position);
+    //asynStatus setPosition(double position);
 
 private:
     AttocubeController* pController;
@@ -45,19 +45,22 @@ friend class AttocubeController;
 };
 
 
-class epicsShareClass AttocubeController : asynMotorController {
+class epicsShareClass AttocubeController : public asynMotorController {
 public:
 
     /* These are the fucntions we override from the base class */
-    AttocubeController(const char *portName, const char* ip);
+    AttocubeController(const char *portName, const char* ip, int numAxes);
     ~AttocubeController();
     asynStatus writeInt32(asynUser* pasynUser, epicsInt32 value);
     void report(FILE* fp, int level);
     AttocubeAxis* getAxis(asynUser* pasynUser);
     AttocubeAxis* getAxis(int axisNun);
+    int getHandle();
 
+    asynUser* getAsynUser();
 protected:
     int controllerHandle;
+    int numAxes;
 
     int AttocubeSerialNumber;
 #define FIRST_ATTOCUBE_PARAM AttocubeSerialNumber
