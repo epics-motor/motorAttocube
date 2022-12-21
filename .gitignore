@@ -17,3 +17,5 @@ auto_positions.sav*
 .ccfxprepdir/
 *.local
 .vscode/
+OLD/
+test.cmd
