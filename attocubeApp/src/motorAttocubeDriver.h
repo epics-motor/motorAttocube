@@ -56,6 +56,8 @@ public:
     AttocubeAxis* getAxis(asynUser* pasynUser);
     AttocubeAxis* getAxis(int axisNun);
     int getHandle();
+    //void asynMotorPoller();
+    virtual void pollThread();
 
     asynUser* getAsynUser();
 protected:
@@ -70,9 +72,12 @@ protected:
     int AttocubeIpAddress;
     int AttocubeMacAddress;
 
+private:
+    epicsThreadId pollThreadId = NULL;
+    bool pollActive = true;
 
 #define LAST_ATTOCUBE_PARAM AttocubeMacAddress
 #define NUM_ATTOCUBE_PARAMS (&LAST_ATTOCUBE_PARAM - &FIRST_ATTOCUBE_PARAM + 1)
   
-//friend class motorAttocubeAxis;
+friend class AttocubeAxis;
 };

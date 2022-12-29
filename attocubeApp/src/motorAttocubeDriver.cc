@@ -100,6 +100,8 @@ asynStatus AttocubeAxis::move(double target, int relative, double minVelocity, d
     asynStatus status = asynSuccess;
     static const char* functionName = "move";
 
+    printf("Got move command: Target: %lf, Relative: %d, minVel: %lf, maxVel: %lf, acc: %lf\n", target, relative, minVelocity, maxVelocity, acceleration);
+
     double position;
 	AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
 
@@ -116,7 +118,6 @@ asynStatus AttocubeAxis::move(double target, int relative, double minVelocity, d
         // Read out position in nm
         AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
         printf("Position %f nm\n", position);
-        epicsThreadSleep(0.1);
         AMC_status_getStatusTargetRange(this->pController->getHandle(), this->channel, &inTargetRange);
     }
 
@@ -128,11 +129,37 @@ asynStatus AttocubeAxis::move(double target, int relative, double minVelocity, d
 asynStatus AttocubeAxis::stop(double acceleration){
 
     AMC_control_setControlMove(this->pController->getHandle(), this->channel, false);
+    printf("Detected stop command with accel %lf\n", acceleration);
     return asynSuccess;
 
 }
 
 asynStatus AttocubeAxis::poll(bool* moving) {
+    int done;
+    int positionerType;
+    int isReferenced;
+    bool closedLoop;
+    int axisState;
+    double position;
+    int referencePosition;
+    bool inverted;
+
+    /**
+    AMC_control_getActorType(this->pController->getHandle(), this->channel, &positionerType);
+    AMC_control_getControlMove(this->pController->getHandle(), this->channel, &closedLoop);
+    AMC_control_getReferencePosition(this->pController->getHandle(), this->channel, &referencePosition);
+    AMC_control_getSensorDirection(this->pController->getHandle(), this->channel, &inverted);
+    */
+    AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
+    AMC_status_getStatusTargetRange(this->pController->getHandle(), this->channel, moving);
+
+    done = *moving ? 0:1;
+    //int isClosedLoop = closedLoop ? 1:0;
+    setIntegerParam(this->pController->motorStatusDone_, done);
+    //setIntegerParam(this->pController->motorStatusDone_, isClosedLoop);
+    setDoubleParam(this->pController->motorPosition_, position);
+
+    callParamCallbacks();
     return asynSuccess;
 }
 
@@ -155,6 +182,8 @@ AttocubeAxis::AttocubeAxis(AttocubeController* pC, int axisNum)
 AttocubeAxis::~AttocubeAxis(){
     static const char* functionName = "~AttocubeAxis";
     bool enabled;
+
+
     AMC_control_getControlOutput(this->pController->getHandle(), this->channel, &enabled);
 
     if(enabled){
@@ -191,8 +220,19 @@ asynStatus AttocubeController::writeInt32(asynUser* pasynUser, epicsInt32 value)
     asynStatus status = asynSuccess;
     AttocubeAxis* pAxis = getAxis(pasynUser);
     static const char* functionName = "writeInt32";
+
+    status = setIntegerParam(pAxis->axisNo_, function, value);
+
+    status = asynMotorController::writeInt32(pasynUser, value);
+
+    callParamCallbacks(pAxis->axisNo_);
+    if(status){
+        ERR_ARGS("Error, status=%d, function=%d, value=%d", status, function, value);
+    }
+
     return status;
 }
+
 
 int AttocubeController::getHandle(){
     return this->controllerHandle;
@@ -201,6 +241,39 @@ int AttocubeController::getHandle(){
 
 asynUser* AttocubeController::getAsynUser(){
     return pasynUserSelf;
+}
+
+
+
+
+
+static void pollThreadC(void* pPvt){
+    AttocubeController* pController = (AttocubeController*) pPvt;
+    pController->pollThread();
+}
+
+
+void AttocubeController::pollThread(){
+
+    bool moving;
+    AttocubeAxis* pAxis;
+    epicsTimeStamp nowTime;
+    int status;
+    bool anyMoving;
+    int i;
+
+    while(pollActive){
+        epicsThreadSleep(0.1);
+        lock();
+        this->poll();
+
+        for(i=0; i<numAxes_; i++){
+            pAxis = getAxis(i);
+            if (!pAxis) continue;
+            else pAxis->poll(&moving);
+        }
+        unlock();
+    }
 }
 
 
@@ -266,10 +339,24 @@ AttocubeController::AttocubeController(const char* portName, const char* ip, int
 
     epicsAtExit(exitCallbackC, (void*) this);
 
+    epicsThreadOpts opts;
+    opts.priority = epicsThreadPriorityMedium;
+    opts.stackSize = epicsThreadGetStackSize(epicsThreadStackMedium);
+    opts.joinable = 1;
+
+    // Spawn our data collection thread. Make it joinable
+    this->pollThreadId =
+        epicsThreadCreateOpt("AttocubePollThread", (EPICSTHREADFUNC)pollThreadC, this, &opts);
+
 }
 
 AttocubeController::~AttocubeController(){
     const char* functionName = "~AttocubeController";
+
+    LOG("Shutting down poll thread...");
+    this->pollActive = false;
+    epicsThreadMustJoin(this->pollThreadId);
+
     LOG("Disabling axes...");
     int axis;
     for(axis=0;axis<this->numAxes;axis++){
