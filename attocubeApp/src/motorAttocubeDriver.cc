@@ -100,14 +100,17 @@ asynStatus AttocubeAxis::move(double target, int relative, double minVelocity, d
     asynStatus status = asynSuccess;
     static const char* functionName = "move";
 
-    printf("Got move command: Target: %lf, Relative: %d, minVel: %lf, maxVel: %lf, acc: %lf\n", target, relative, minVelocity, maxVelocity, acceleration);
+    // Since we configured the outward facing interface to use um, we need to multiply the target by 1000 to get nm
+    //double target_nm = target * 1000;
+    double target_nm = target;
+    printf("Got move command: Target: %lf, Relative: %d, minVel: %lf, maxVel: %lf, acc: %lf\n", target_nm, relative, minVelocity, maxVelocity, acceleration);
 
     double position;
 	AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
 
-    double finalPosition = target;
+    double finalPosition = target_nm;
     if(relative == 1)
-        finalPosition = position + target;
+        finalPosition = position + target_nm;
 
 	AMC_move_setControlTargetPosition(this->pController->getHandle(), this->channel, finalPosition);
 	AMC_control_setControlMove(this->pController->getHandle(), this->channel, true);
@@ -134,6 +137,14 @@ asynStatus AttocubeAxis::stop(double acceleration){
 
 }
 
+
+asynStatus AttocubeAxis::home(double minVelocity, double maxVelocity, double acceleration, int forwards) {
+    static const char* functionName = "home";
+    printf("Home command recieved for axis %d\n", this->channel);
+    AMC_control_searchReferencePosition(this->pController->getHandle(), this->channel);
+}
+
+
 asynStatus AttocubeAxis::poll(bool* moving) {
     int done;
     int positionerType;
@@ -143,21 +154,24 @@ asynStatus AttocubeAxis::poll(bool* moving) {
     double position;
     int referencePosition;
     bool inverted;
-
-    /**
+/** 
     AMC_control_getActorType(this->pController->getHandle(), this->channel, &positionerType);
     AMC_control_getControlMove(this->pController->getHandle(), this->channel, &closedLoop);
     AMC_control_getReferencePosition(this->pController->getHandle(), this->channel, &referencePosition);
     AMC_control_getSensorDirection(this->pController->getHandle(), this->channel, &inverted);
-    */
+   */ 
     AMC_move_getPosition(this->pController->getHandle(), this->channel, &position);
     AMC_status_getStatusTargetRange(this->pController->getHandle(), this->channel, moving);
+
 
     done = *moving ? 0:1;
     //int isClosedLoop = closedLoop ? 1:0;
     setIntegerParam(this->pController->motorStatusDone_, done);
     //setIntegerParam(this->pController->motorStatusDone_, isClosedLoop);
-    setDoubleParam(this->pController->motorPosition_, position);
+    
+    // AMC software works in nm, since we configured the outward facing interface to be um, divide by 1000.
+    //position = position / 1000.0;
+    setDoubleParam(this->pController->motorPosition_, (double) position);
 
     callParamCallbacks();
     return asynSuccess;

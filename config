@@ -1,0 +1,4 @@
+NAME=mcb14-attocube
+USER=softioc-fxi
+PORT=5114
+HOST=xf18idb-ioc1

@@ -1,24 +1,25 @@
 #!../../bin/linux-x86_64/attocube
 
 < envPaths
+< /epics/common/xf18idb-ioc1-netsetup.cmd
 
-cd "${TOP}"
+
+epicsEnvSet("PREFIX", "XF:18IDB-OP{ATTOCUBE}")
 
 ## Register all support components
-dbLoadDatabase "dbd/attocube.dbd"
+dbLoadDatabase "$(TOP)/dbd/attocube.dbd"
 attocube_registerRecordDeviceDriver pdbbase
 
-cd "${TOP}/iocBoot/${IOC}"
 
 ## motorUtil (allstop & alldone)
-dbLoadRecords("$(MOTOR)/db/motorUtil.db", "P=attocube:")
+#dbLoadRecords("$(MOTOR)/db/motorUtil.db", "P=attocube:")
 
 ##
-< ANC150.cmd
+< AMC100.cmd
 
-iocInit
+iocInit()
 
 ## motorUtil (allstop & alldone)
-motorUtilInit("attocube:")
+#motorUtilInit("attocube:")
 
 # Boot complete
