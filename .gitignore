@@ -15,7 +15,6 @@ dllPath.bat
 auto_settings.sav*
 auto_positions.sav*
 .ccfxprepdir/
-*.local
 .vscode/
 OLD/
 test.cmd

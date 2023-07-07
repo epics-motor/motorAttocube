@@ -1,6 +1,7 @@
 
 epicsEnvSet("PORT", "AC1")
-epicsEnvSet("CONTROLLER_IP", "10.66.138.124")
+epicsEnvSet("CONTROLLER_IP", "10.18.0.122")
+epicsEnvSet("PREFIX", "XF:18IDB-OP{ATTOCUBE}")
 
 
 AttocubeControllerConfig("$(PORT)", "$(CONTROLLER_IP)", 3)
@@ -8,3 +9,6 @@ dbLoadRecords("$(MOTOR_ATTOCUBE)/db/Attocube.template", "PREFIX=$(PREFIX), PORT=
 
 
 dbLoadTemplate("AMC100.substitutions")
+
+
+iocInit()
