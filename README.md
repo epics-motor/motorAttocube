@@ -1,5 +1,5 @@
 # motorAttocube
-EPICS motor drivers for the following [Attocube](https://www.attocube.com) controllers: ANC150 Piezo Step Controller
+EPICS motor drivers for the following [Attocube](https://www.attocube.com) controllers: ANC150 Piezo Step Controller, AMC controllers (AMC100 etc.)
 
 [![Build Status](https://github.com/epics-motor/motorAttocube/actions/workflows/ci-scripts-build.yml/badge.svg)](https://github.com/epics-motor/motorAttocube/actions/workflows/ci-scripts-build.yml)
 <!--[![Build Status](https://travis-ci.org/epics-motor/motorAttocube.png)](https://travis-ci.org/epics-motor/motorAttocube)-->

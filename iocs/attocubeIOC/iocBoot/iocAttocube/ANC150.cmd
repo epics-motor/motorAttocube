@@ -1,4 +1,7 @@
 
+## motorUtil (allstop & alldone)
+dbLoadRecords("$(MOTOR)/db/motorUtil.db", "P=attocube:")
+
 drvAsynSerialPortConfigure("serial1","/dev/ttyS0",0,0,0)
 #!asynSetOption("serial", -1, "baud", "38400")
 #!asynOctetSetInputEos("serial1",0,"")
@@ -16,3 +19,11 @@ ANC150AsynSetup(1)  /* number of ANC150 controllers in system.  */
 #     (4) Time to poll (msec) when an axis is in motion
 #     (5) Time to poll (msec) when an axis is idle. 0 for no polling
 ANC150AsynConfig(0, "serial1", 3, 250, 2000)
+
+
+iocInit()
+
+## motorUtil (allstop & alldone)
+motorUtilInit("attocube:")
+
+# Boot complete

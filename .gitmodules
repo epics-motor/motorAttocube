@@ -1,3 +1,6 @@
 [submodule ".ci"]
 	path = .ci
 	url = https://github.com/epics-base/ci-scripts
+[submodule "attocubeSupport/AMC-APIs"]
+	path = attocubeSupport/AMC-APIs
+	url = https://github.com/attocube-systems/AMC-APIs
