@@ -1,0 +1,8 @@
+file "$(EPICS_BASE)/db/basic_asyn_motor.db"
+{
+pattern
+{P,            N,  M,                       DTYP,         PORT, ADDR,  DESC,          EGU,  DIR,  VELO, VBAS,  ACCL,  BDST,  BVEL,  BACC, MRES,        PREC,  DHLM, DLLM, INIT}
+{XF:18IDB-OP,  1,  "{ATTOCUBE:AX$(N)}Mtr",  "asynMotor",  AC1,  0,     "motor $(N)",  um,   Pos,  .0,   .0,    .0,    0,     1,    .2,    0.001,            6,     0,    0,    ""}
+{XF:18IDB-OP,  2,  "{ATTOCUBE:AX$(N)}Mtr",  "asynMotor",  AC1,  1,     "motor $(N)",  um,   Pos,  .0,   .0,    .0,    0,     1,    .2,    0.001,            6,     0,    0,    ""}
+{XF:18IDB-OP,  3,  "{ATTOCUBE:AX$(N)}Mtr",  "asynMotor",  AC1,  2,     "motor $(N)",  um,   Pos,  .0,   .0,    .0,    0,     1,    .2,    0.001,            6,     0,    0,    ""}
+}
