@@ -142,6 +142,7 @@ asynStatus AttocubeAxis::home(double minVelocity, double maxVelocity, double acc
     static const char* functionName = "home";
     printf("Home command recieved for axis %d\n", this->channel);
     AMC_control_searchReferencePosition(this->pController->getHandle(), this->channel);
+    return asynSuccess;
 }
 
 
