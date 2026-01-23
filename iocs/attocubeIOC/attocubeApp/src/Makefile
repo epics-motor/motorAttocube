@@ -25,6 +25,7 @@ attocube_DBD += drvAsynSerialPort.dbd
 #endif
 attocube_DBD += motorSupport.dbd
 attocube_DBD += devAttocube.dbd
+# This can't be included on OS X
 attocube_DBD += attocubeDriver.dbd
 
 # Add all the support libraries needed by this IOC
@@ -50,7 +51,8 @@ attocube_SRCS_vxWorks += -nil-
 # Finally link to the EPICS Base libraries
 attocube_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-attocube_LIBS += attocubeJSON
+attocube_LIBS_WIN32 += attocubeJSON
+attocube_LIBS_Linux += attocubeJSON
 
 #===========================
 
