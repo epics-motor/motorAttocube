@@ -25,8 +25,8 @@ attocube_DBD += drvAsynSerialPort.dbd
 #endif
 attocube_DBD += motorSupport.dbd
 attocube_DBD += devAttocube.dbd
-# This can't be included on OS X
-attocube_DBD += attocubeDriver.dbd
+attocube_DBD_WIN32 += attocubeDriver.dbd
+attocube_DBD_Linux += attocubeDriver.dbd
 
 # Add all the support libraries needed by this IOC
 attocube_LIBS += Attocube
