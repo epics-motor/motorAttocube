@@ -1,0 +1,47 @@
+record(stringin, "$(PREFIX):SerialNumber_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "Serial number of device")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_SERIAL")
+}
+
+
+record(stringin, "$(PREFIX):DeviceName_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_DEV_NAME")
+}
+
+
+record(stringin, "$(PREFIX):FirmwareVersion_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_FIRMWARE")
+}
+
+
+record(stringin, "$(PREFIX):Hostname_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_HOSTNAME")
+}
+
+
+record(stringin, "$(PREFIX):IpAddress_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_IP")
+}
+
+
+record(stringin, "$(PREFIX):MacAddress_RBV") {
+    field(DTYP, "asynOctetRead")
+    field(DESC, "")
+    field(SCAN, "I/O Intr")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ATTOCUBE_MAC")
+}
+

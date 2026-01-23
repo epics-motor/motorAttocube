@@ -1,0 +1,38 @@
+file "basic_asyn_motor.db"
+
+
+record(bo, "$(P)$(M)Active"){
+	field(PINI, "YES")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR=0),$(TIMEOUT=1))ACTIVE")
+    field(ZNAM, "Disabled")
+    field(ONAM, "Enabled")
+    field(VAL,  "0")
+    field(OSV,  "MINOR")
+    info(autosaveFields, "VAL")
+}
+#
+#
+#record(ao, "$(P)$(M)Amplitude"){
+#    field(PINI, "YES")
+#    field(DTYP, "asynInt32")
+#    field(VAL, "30")
+#    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))AMPLITUDE") 
+#}
+#
+#
+#record(ao, "$(P)$(M)Frequency"){
+#    field(PINI, "YES")
+#    field(DTYP, "asynInt32")
+#    field(VAL, "1001")
+#    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FREQUENCY") 
+#}
+#
+#
+#
+#record(ao, "$(P)$(M)DC"){
+#    field(PINI, "YES")
+#    field(DTYP, "asynInt32")
+#    field(VAL, "0")
+#    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DC") 
+#}
