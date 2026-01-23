@@ -19,8 +19,9 @@ Attocube_SRCS_Linux += motorAttocubeDriver.cc
 Attocube_SRCS_WIN32 += motorAttocubeDriver.cc
 
 Attocube_LIBS += motor asyn
-Attocube_LIBS_Linux += $(EPICS_BASE_IOC_LIBS) attocubeJSON
-Attocube_LIBS_WIN32 += $(EPICS_BASE_IOC_LIBS) attocubeJSON
+Attocube_LIBS += $(EPICS_BASE_IOC_LIBS)
+Attocube_LIBS_Linux += attocubeJSON
+Attocube_LIBS_WIN32 += attocubeJSON
 
 include $(TOP)/configure/RULES
 
