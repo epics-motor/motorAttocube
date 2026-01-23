@@ -28,8 +28,10 @@ endif
 
 
 # Header file names are the same regardless of arch, but should be pulled from respective directories
-INC += attocubeJSONCall.h
-INC += generatedAPI.h
+INC_WIN32 += attocubeJSONCall.h
+INC_Linux += attocubeJSONCall.h
+INC_WIN32 += generatedAPI.h
+INC_Linux += generatedAPI.h
 
 
 include $(TOP)/configure/RULES
