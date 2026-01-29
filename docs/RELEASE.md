@@ -6,7 +6,7 @@ R1-1 is a release based on the master branch.
 ### Changes since R1-0-2
 
 #### New features
-* Pull request [#2](https://github.com/epics-motor/motorAttocube/pull/2): [Jakub Wlodek](https://github.com/jwlodek) added an asyn model-3 driver with support for Attocube AMC controllers like the AMC100 (requires EPICS base 7.0.3.1 or later)
+* Pull request [#2](https://github.com/epics-motor/motorAttocube/pull/2): [Jakub Wlodek](https://github.com/jwlodek) added an asyn model-3 driver with support for Attocube AMC controllers like the AMC100 (**requires EPICS base 7.0.3.1 or later**)
 
 #### Modifications to existing features
 * None
