@@ -1,5 +1,23 @@
 # motorAttocube Releases
 
+## __R1-1 (2026-01-29)__
+R1-1 is a release based on the master branch.
+
+### Changes since R1-0-2
+
+#### New features
+* Pull request [#2](https://github.com/epics-motor/motorAttocube/pull/2): [Jakub Wlodek](https://github.com/jwlodek) added an asyn model-3 driver with support for Attocube AMC controllers like the AMC100 (**requires EPICS base 7.0.3.1 or later**)
+
+#### Modifications to existing features
+* None
+
+#### Bug fixes
+* Pull request [#4](https://github.com/epics-motor/motorAttocube/pull/4): Only build the new motorAttocubeDriver on Windows and Linux
+* Pull request [#6](https://github.com/epics-motor/motorAttocube/pull/6): Bug fix for compile errors for custom linux EPICS_HOST_ARCHs
+
+#### Continuous integration
+* Upgraded ci-scripts (v3.4.1)
+
 ## __R1-0-2 (2023-04-11)__
 R1-0-2 is a release based on the master branch.
 
